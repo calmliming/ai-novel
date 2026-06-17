@@ -18,6 +18,7 @@ const updateChapterSchema = z.object({
       "ai_polish",
       "ai_expand",
       "ai_shorten",
+      "ai_agent",
       "rollback",
       "import"
     ])

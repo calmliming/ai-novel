@@ -39,6 +39,8 @@ type Preview = {
   result: AIWriteResponse;
 };
 
+type AgentApplyMode = "insert" | "replace" | "append" | "title" | "new-chapter";
+
 /**
  * Owns all chapter-editor state, autosave, AI orchestration and conflict
  * handling. Extracted from ChapterEditor so the view layer is purely
@@ -375,6 +377,89 @@ export function useChapterWorkspace(novelId: string, chapterId: string) {
     [preview, selection.start, selection.end, saveDraft, persist]
   );
 
+  const applyAgentContent = useCallback(
+    async (agentContent: string, mode: AgentApplyMode) => {
+      const cleaned = agentContent.trim();
+
+      if (!cleaned) {
+        return;
+      }
+
+      if (mode === "new-chapter") {
+        if (!window.confirm("用这条 Agent 回复创建新章节并跳转过去吗？")) {
+          return;
+        }
+
+        const data = await apiFetch<{ chapter: Chapter }>(`/api/novels/${novelId}/chapters`, {
+          method: "POST",
+          body: JSON.stringify({
+            title: deriveAgentTitle(cleaned, "Agent 新章节"),
+            content: cleaned
+          })
+        });
+        window.location.href = `/novels/${novelId}/chapters/${data.chapter.id}`;
+        return;
+      }
+
+      if (
+        mode === "replace" &&
+        selection.start === selection.end &&
+        !window.confirm("当前没有选中文本，要用 Agent 回复替换整章正文吗？")
+      ) {
+        return;
+      }
+
+      const current = contentRef.current;
+      const selectionStart = Math.min(Math.max(selection.start, 0), current.length);
+      const selectionEnd = Math.min(Math.max(selection.end, selectionStart), current.length);
+      let nextContent = current;
+      let nextTitle = titleRef.current;
+      let sourceLabel = "Agent 对话写入";
+
+      if (mode === "title") {
+        nextTitle = deriveAgentTitle(cleaned, titleRef.current || "未命名章节");
+        sourceLabel = "Agent 修改标题";
+      }
+
+      if (mode === "append") {
+        nextContent = current.trimEnd() ? `${current.trimEnd()}\n\n${cleaned}` : cleaned;
+      }
+
+      if (mode === "replace") {
+        if (selectionStart !== selectionEnd) {
+          nextContent = `${current.slice(0, selectionStart)}${cleaned}${current.slice(
+            selectionEnd
+          )}`;
+        } else {
+          nextContent = cleaned;
+        }
+      }
+
+      if (mode === "insert") {
+        const insertAt = selectionStart;
+        nextContent = `${current.slice(0, insertAt)}${cleaned}${current.slice(insertAt)}`;
+      }
+
+      if (mode === "title") {
+        setTitle(nextTitle);
+        titleRef.current = nextTitle;
+      }
+
+      setContent(nextContent);
+      contentRef.current = nextContent;
+      await saveDraft(nextTitle, nextContent, "local");
+      await persist({
+        nextTitle,
+        nextContent,
+        source: "ai_agent",
+        createVersion: true,
+        sourceLabel
+      });
+      textareaRef.current?.focus();
+    },
+    [novelId, persist, saveDraft, selection.end, selection.start]
+  );
+
   const copyAI = useCallback(async () => {
     if (preview?.result.content) {
       await navigator.clipboard.writeText(preview.result.content);
@@ -447,6 +532,7 @@ export function useChapterWorkspace(novelId: string, chapterId: string) {
     importantWorld,
     nextOutline,
     smartTags,
+    selectedText: selection.text,
     textareaRef,
     updateTitle,
     updateContent,
@@ -455,10 +541,26 @@ export function useChapterWorkspace(novelId: string, chapterId: string) {
     createChapter,
     runAI,
     applyAI,
+    applyAgentContent,
     copyAI,
     closePreview,
     regeneratePreview,
     useServerVersion,
     overwriteServer
   };
+}
+
+function deriveAgentTitle(content: string, fallback: string) {
+  const firstLine =
+    content
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find(Boolean) ?? fallback;
+
+  return firstLine
+    .replace(/^#+\s*/, "")
+    .replace(/^《(.+)》$/, "$1")
+    .replace(/[。！？!?，,：:；;].*$/, "")
+    .slice(0, 32)
+    .trim() || fallback;
 }

@@ -37,6 +37,7 @@ export function versionSourceLabel(source: string) {
     ai_polish: "AI 润色",
     ai_expand: "AI 扩写",
     ai_shorten: "AI 缩写",
+    ai_agent: "Agent 对话",
     rollback: "版本回滚",
     import: "导入"
   };
@@ -51,4 +52,3 @@ export function ensureErrorMessage(error: unknown) {
 
   return String(error);
 }
-

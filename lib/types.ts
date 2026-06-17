@@ -10,6 +10,7 @@ export type VersionSource =
   | "ai_polish"
   | "ai_expand"
   | "ai_shorten"
+  | "ai_agent"
   | "rollback"
   | "import";
 
@@ -160,6 +161,11 @@ export type ChatMessage = {
   content: string;
 };
 
+export type AIAgentChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 export type LocalDraft = {
   chapterId: string;
   novelId: string;
@@ -203,6 +209,25 @@ export type AIWriteResponse = {
   };
 };
 
+export type AIAgentRequest = {
+  novelId: string;
+  chapterId?: string;
+  chapterTitle?: string;
+  chapterContent?: string;
+  selectedText?: string;
+  messages: AIAgentChatMessage[];
+  modelMode?: AIModelMode;
+};
+
+export type AIAgentResponse = {
+  content: string;
+  model: string;
+  usage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+  };
+};
+
 export type NovelBundle = {
   novel: Novel;
   chapters: Chapter[];
@@ -211,4 +236,3 @@ export type NovelBundle = {
   outlines: OutlineItem[];
   versions: ChapterVersion[];
 };
-

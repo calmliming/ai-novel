@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Loader2, SlidersHorizontal } from "lucide-react";
+import { AgentChatDialog } from "@/components/editor/AgentChatDialog";
 import { AIPreviewDrawer } from "@/components/editor/AIPreviewDrawer";
 import { AIAssistantContent, AIAssistantPanel } from "@/components/editor/AIAssistantPanel";
 import { ChapterNavContent, ChapterSidebar } from "@/components/editor/ChapterNav";
@@ -40,6 +41,7 @@ export function ChapterEditor({ novelId, chapterId }: { novelId: string; chapter
     importantWorld,
     nextOutline,
     smartTags,
+    selectedText,
     textareaRef,
     updateTitle,
     updateContent,
@@ -48,6 +50,7 @@ export function ChapterEditor({ novelId, chapterId }: { novelId: string; chapter
     createChapter,
     runAI,
     applyAI,
+    applyAgentContent,
     copyAI,
     closePreview,
     regeneratePreview,
@@ -55,6 +58,7 @@ export function ChapterEditor({ novelId, chapterId }: { novelId: string; chapter
     overwriteServer
   } = useChapterWorkspace(novelId, chapterId);
   const [openDrawer, setOpenDrawer] = useState<DrawerKey | null>(null);
+  const [agentOpen, setAgentOpen] = useState(false);
   const closeDrawer = () => setOpenDrawer(null);
 
   if (loading) {
@@ -141,7 +145,11 @@ export function ChapterEditor({ novelId, chapterId }: { novelId: string; chapter
                 placeholder="开始写正文..."
               />
 
-              <FloatingAIBar runningTask={runningTask} onRun={runAI} />
+              <FloatingAIBar
+                runningTask={runningTask}
+                onRun={runAI}
+                onOpenAgent={() => setAgentOpen(true)}
+              />
             </article>
 
             <FormatToolbar wordCount={currentWordCount} />
@@ -162,6 +170,7 @@ export function ChapterEditor({ novelId, chapterId }: { novelId: string; chapter
           outline={nextOutline}
           tags={smartTags}
           onRun={runAI}
+          onOpenAgent={() => setAgentOpen(true)}
           runningTask={runningTask}
         />
       </div>
@@ -200,6 +209,10 @@ export function ChapterEditor({ novelId, chapterId }: { novelId: string; chapter
           outline={nextOutline}
           tags={smartTags}
           onRun={runAI}
+          onOpenAgent={() => {
+            setAgentOpen(true);
+            closeDrawer();
+          }}
           runningTask={runningTask}
         />
       </Drawer>
@@ -232,6 +245,18 @@ export function ChapterEditor({ novelId, chapterId }: { novelId: string; chapter
           onRegenerate={regeneratePreview}
         />
       ) : null}
+
+      <AgentChatDialog
+        open={agentOpen}
+        novelId={novelId}
+        chapterId={chapterId}
+        chapterTitle={title}
+        chapterContent={content}
+        selectedText={selectedText}
+        applying={saving}
+        onApplyContent={applyAgentContent}
+        onClose={() => setAgentOpen(false)}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   FileText,
   Layers3,
   Loader2,
+  MessageSquareText,
   Sparkles,
   Tags
 } from "lucide-react";
@@ -25,6 +26,7 @@ type AIAssistantProps = {
   outline?: OutlineItem;
   tags: string[];
   onRun: (task: AIWriteTask) => void;
+  onOpenAgent: () => void;
   runningTask?: AIWriteTask;
 };
 
@@ -35,6 +37,7 @@ export function AIAssistantContent({
   outline,
   tags,
   onRun,
+  onOpenAgent,
   runningTask
 }: AIAssistantProps) {
   return (
@@ -48,6 +51,20 @@ export function AIAssistantContent({
       </div>
 
       <div className="grid gap-4">
+        <AssistantCard
+          title="Agent 对话"
+          icon={MessageSquareText}
+          actionLabel="打开对话"
+          onAction={onOpenAgent}
+        >
+          <div className="grid grid-cols-2 gap-2 text-xs font-medium text-slate-600">
+            <span className="rounded-lg bg-slate-50 px-3 py-2">剧情推进</span>
+            <span className="rounded-lg bg-slate-50 px-3 py-2">人物动机</span>
+            <span className="rounded-lg bg-slate-50 px-3 py-2">伏笔回收</span>
+            <span className="rounded-lg bg-slate-50 px-3 py-2">片段润色</span>
+          </div>
+        </AssistantCard>
+
         <AssistantCard
           title="写作建议"
           icon={Bot}
