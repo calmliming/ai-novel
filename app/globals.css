@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #020617;
+  --color-paper: #f8fafc;
+  --color-moss: #059669;
+  --color-wine: #e11d48;
+  --color-brass: #d97706;
+  --color-ocean: #1d4ed8;
+  --shadow-soft: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+:root {
+  color-scheme: light;
+  background: #f8fafc;
+  color: #020617;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: #f8fafc;
+  color: #020617;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+textarea {
+  resize: none;
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.18);
+}
+
+@layer components {
+  .focus-ring {
+    @apply outline-none ring-2 ring-transparent transition focus-visible:ring-ocean/50;
+  }
+}

@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  novels Novel[]
+  aiJobs AIJob[]
+}
+
+model Novel {
+  id             String   @id @default(uuid())
+  userId         String
+  title          String
+  genre          String?
+  style          String?
+  synopsis       String?
+  status         String   @default("draft")
+  totalWordCount Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  volumes       Volume[]
+  chapters      Chapter[]
+  versions      ChapterVersion[]
+  characters    Character[]
+  worldSettings WorldSetting[]
+  outlines      Outline[]
+  aiJobs        AIJob[]
+}
+
+model Volume {
+  id          String   @id @default(uuid())
+  novelId     String
+  title       String
+  description String?
+  orderIndex  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  novel    Novel     @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  chapters Chapter[]
+}
+
+model Chapter {
+  id          String   @id @default(uuid())
+  novelId     String
+  volumeId    String?
+  title       String
+  content     String   @default("")
+  summary     String?
+  wordCount   Int      @default(0)
+  orderIndex  Int
+  status      String   @default("draft")
+  versionNo   Int      @default(1)
+  contentHash String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  novel    Novel            @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  volume   Volume?          @relation(fields: [volumeId], references: [id], onDelete: SetNull)
+  versions ChapterVersion[]
+  aiJobs   AIJob[]
+
+  @@index([novelId, orderIndex])
+}
+
+model ChapterVersion {
+  id              String   @id @default(uuid())
+  novelId          String
+  chapterId        String
+  userId           String
+  title            String?
+  content          String
+  wordCount        Int      @default(0)
+  versionNo        Int
+  source           String
+  sourceLabel      String?
+  aiModel          String?
+  aiJobId          String?
+  promptSnapshot   String?
+  parentVersionId  String?
+  contentHash      String?
+  createdAt        DateTime @default(now())
+
+  novel   Novel   @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@index([chapterId, createdAt])
+  @@index([novelId, createdAt])
+}
+
+model Character {
+  id                String   @id @default(uuid())
+  novelId            String
+  name              String
+  alias             String?
+  role              String?
+  gender            String?
+  age               String?
+  appearance        String?
+  personality       String?
+  background        String?
+  motivation        String?
+  speechStyle       String?
+  relationshipNotes String?
+  status            String   @default("active")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  novel Novel @relation(fields: [novelId], references: [id], onDelete: Cascade)
+
+  @@index([novelId, name])
+}
+
+model WorldSetting {
+  id         String   @id @default(uuid())
+  novelId    String
+  category   String
+  title      String
+  content    String
+  importance Int      @default(3)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  novel Novel @relation(fields: [novelId], references: [id], onDelete: Cascade)
+
+  @@index([novelId, category])
+}
+
+model Outline {
+  id         String   @id @default(uuid())
+  novelId    String
+  volumeId   String?
+  chapterId  String?
+  type       String
+  title      String?
+  content    String
+  orderIndex Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  novel Novel @relation(fields: [novelId], references: [id], onDelete: Cascade)
+
+  @@index([novelId, type])
+}
+
+model AIJob {
+  id            String    @id @default(uuid())
+  userId        String
+  novelId       String
+  chapterId     String?
+  task          String
+  status        String    @default("pending")
+  model         String
+  inputMessages Json?
+  outputText    String?
+  inputTokens   Int?
+  outputTokens  Int?
+  errorMessage  String?
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  createdAt     DateTime  @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  novel   Novel    @relation(fields: [novelId], references: [id], onDelete: Cascade)
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+
+  @@index([novelId, createdAt])
+  @@index([chapterId, createdAt])
+}
+
