@@ -48,7 +48,7 @@ export function WorldSettingForm({
 
   return (
     <form className="grid gap-3" onSubmit={submit}>
-      <div className="grid grid-cols-[1fr_96px] gap-3">
+      <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-[1fr_96px]">
         <Input
           value={value.title}
           onChange={(event) => setValue((current) => ({ ...current, title: event.target.value }))}
