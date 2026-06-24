@@ -33,19 +33,25 @@ export function CharacterForm({
     }
 
     setSaving(true);
-    await onSubmit(value);
-    setSaving(false);
 
-    if (!initialValue) {
-      setValue({
-        id: undefined,
-        name: "",
-        role: "",
-        personality: "",
-        motivation: "",
-        speechStyle: "",
-        relationshipNotes: ""
-      });
+    try {
+      await onSubmit(value);
+
+      if (!initialValue) {
+        setValue({
+          id: undefined,
+          name: "",
+          role: "",
+          personality: "",
+          motivation: "",
+          speechStyle: "",
+          relationshipNotes: ""
+        });
+      }
+    } catch {
+      // The parent surface renders the API error; keep the current form draft.
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -102,4 +108,3 @@ export function CharacterForm({
     </form>
   );
 }
-

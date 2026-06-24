@@ -32,17 +32,23 @@ export function WorldSettingForm({
     }
 
     setSaving(true);
-    await onSubmit(value);
-    setSaving(false);
 
-    if (!initialValue) {
-      setValue({
-        id: undefined,
-        category: "世界观",
-        title: "",
-        content: "",
-        importance: 3
-      });
+    try {
+      await onSubmit(value);
+
+      if (!initialValue) {
+        setValue({
+          id: undefined,
+          category: "世界观",
+          title: "",
+          content: "",
+          importance: 3
+        });
+      }
+    } catch {
+      // The parent surface renders the API error; keep the current form draft.
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -86,4 +92,3 @@ export function WorldSettingForm({
     </form>
   );
 }
-

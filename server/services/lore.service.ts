@@ -58,6 +58,30 @@ export async function upsertCharacter(
   });
 }
 
+export async function updateCharacter(
+  characterId: string,
+  input: Partial<CharacterProfile> & { name: string }
+) {
+  return mutateDatabase((database) => {
+    const existing = database.characters.find((character) => character.id === characterId);
+
+    if (!existing) {
+      return null;
+    }
+
+    Object.assign(existing, {
+      ...input,
+      id: characterId,
+      novelId: existing.novelId,
+      name: input.name.trim(),
+      status: input.status ?? existing.status,
+      updatedAt: nowIso()
+    });
+
+    return existing;
+  });
+}
+
 export async function deleteCharacter(characterId: string) {
   return mutateDatabase((database) => {
     const exists = database.characters.some((character) => character.id === characterId);
@@ -113,6 +137,32 @@ export async function upsertWorldSetting(
   });
 }
 
+export async function updateWorldSetting(
+  settingId: string,
+  input: Partial<WorldSetting> & { title: string; content: string }
+) {
+  return mutateDatabase((database) => {
+    const existing = database.worldSettings.find((setting) => setting.id === settingId);
+
+    if (!existing) {
+      return null;
+    }
+
+    Object.assign(existing, {
+      ...input,
+      id: settingId,
+      novelId: existing.novelId,
+      title: input.title.trim(),
+      content: input.content.trim(),
+      category: input.category || existing.category || "设定",
+      importance: Number(input.importance ?? existing.importance),
+      updatedAt: nowIso()
+    });
+
+    return existing;
+  });
+}
+
 export async function deleteWorldSetting(settingId: string) {
   return mutateDatabase((database) => {
     const exists = database.worldSettings.some((setting) => setting.id === settingId);
@@ -157,6 +207,30 @@ export async function upsertOutline(
   });
 }
 
+export async function updateOutline(
+  outlineId: string,
+  input: Partial<OutlineItem> & { content: string }
+) {
+  return mutateDatabase((database) => {
+    const existing = database.outlines.find((outline) => outline.id === outlineId);
+
+    if (!existing) {
+      return null;
+    }
+
+    Object.assign(existing, {
+      ...input,
+      id: outlineId,
+      novelId: existing.novelId,
+      content: input.content.trim(),
+      orderIndex: Number(input.orderIndex ?? existing.orderIndex),
+      updatedAt: nowIso()
+    });
+
+    return existing;
+  });
+}
+
 export async function deleteOutline(outlineId: string) {
   return mutateDatabase((database) => {
     const exists = database.outlines.some((outline) => outline.id === outlineId);
@@ -164,4 +238,3 @@ export async function deleteOutline(outlineId: string) {
     return exists;
   });
 }
-

@@ -8,6 +8,7 @@ import {
   Boxes,
   Clock3,
   Download,
+  Edit3,
   FilePlus2,
   History,
   Loader2,
@@ -15,7 +16,8 @@ import {
   Settings,
   Sparkles,
   Trash2,
-  Users
+  Users,
+  X
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { ChapterList } from "@/components/chapter/ChapterList";
@@ -166,19 +168,34 @@ export function NovelDetailView({
   }
 
   async function saveCharacter(value: Partial<CharacterProfile> & { name: string }) {
-    await apiFetch(`/api/novels/${novelId}/characters`, {
-      method: "POST",
-      body: JSON.stringify(value)
-    });
-    await loadBundle();
+    try {
+      await apiFetch(value.id ? `/api/characters/${value.id}` : `/api/novels/${novelId}/characters`, {
+        method: value.id ? "PATCH" : "POST",
+        body: JSON.stringify(value)
+      });
+      setError("");
+      await loadBundle();
+    } catch (saveError) {
+      setError(getApiError(saveError));
+      throw saveError;
+    }
   }
 
   async function saveWorldSetting(value: Partial<WorldSetting> & { title: string; content: string }) {
-    await apiFetch(`/api/novels/${novelId}/world-settings`, {
-      method: "POST",
-      body: JSON.stringify(value)
-    });
-    await loadBundle();
+    try {
+      await apiFetch(
+        value.id ? `/api/world-settings/${value.id}` : `/api/novels/${novelId}/world-settings`,
+        {
+          method: value.id ? "PATCH" : "POST",
+          body: JSON.stringify(value)
+        }
+      );
+      setError("");
+      await loadBundle();
+    } catch (saveError) {
+      setError(getApiError(saveError));
+      throw saveError;
+    }
   }
 
   async function saveOutline(event: FormEvent) {
@@ -211,6 +228,20 @@ export function NovelDetailView({
       await loadBundle();
     } catch (deleteError) {
       setError(getApiError(deleteError));
+    }
+  }
+
+  async function updateOutline(value: Partial<OutlineItem> & { id: string; content: string }) {
+    try {
+      await apiFetch(`/api/outlines/${value.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(value)
+      });
+      setError("");
+      await loadBundle();
+    } catch (saveError) {
+      setError(getApiError(saveError));
+      throw saveError;
     }
   }
 
@@ -397,7 +428,7 @@ export function NovelDetailView({
                 </Button>
               </form>
             </Surface>
-            <OutlineList outlines={bundle.outlines} onDelete={deleteItem} />
+            <OutlineList outlines={bundle.outlines} onSave={updateOutline} onDelete={deleteItem} />
           </section>
         ) : null}
 
@@ -406,7 +437,7 @@ export function NovelDetailView({
             <Surface className="p-4 min-[1400px]:self-start">
               <CharacterForm onSubmit={saveCharacter} />
             </Surface>
-            <CharacterList characters={bundle.characters} onDelete={deleteItem} />
+            <CharacterList characters={bundle.characters} onSave={saveCharacter} onDelete={deleteItem} />
           </section>
         ) : null}
 
@@ -415,7 +446,11 @@ export function NovelDetailView({
             <Surface className="p-4 min-[1400px]:self-start">
               <WorldSettingForm onSubmit={saveWorldSetting} />
             </Surface>
-            <WorldSettingList settings={bundle.worldSettings} onDelete={deleteItem} />
+            <WorldSettingList
+              settings={bundle.worldSettings}
+              onSave={saveWorldSetting}
+              onDelete={deleteItem}
+            />
           </section>
         ) : null}
 
@@ -489,9 +524,11 @@ function DetailMetric({ label, value }: { label: string; value: string }) {
 
 function OutlineList({
   outlines,
+  onSave,
   onDelete
 }: {
   outlines: OutlineItem[];
+  onSave: (value: Partial<OutlineItem> & { id: string; content: string }) => Promise<void>;
   onDelete: (url: string) => void;
 }) {
   if (!outlines.length) {
@@ -501,34 +538,175 @@ function OutlineList({
   return (
     <div className="grid gap-3">
       {outlines.map((outline) => (
-        <Surface key={outline.id} className="p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="font-semibold text-ink">{outline.title || "剧情节点"}</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-black/65">
-                {outline.content}
-              </p>
-            </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => onDelete(`/api/outlines/${outline.id}`)}
-              aria-label="删除大纲"
-            >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          </div>
-        </Surface>
+        <OutlineCard key={outline.id} outline={outline} onSave={onSave} onDelete={onDelete} />
       ))}
     </div>
   );
 }
 
+function OutlineCard({
+  outline,
+  onSave,
+  onDelete
+}: {
+  outline: OutlineItem;
+  onSave: (value: Partial<OutlineItem> & { id: string; content: string }) => Promise<void>;
+  onDelete: (url: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [draft, setDraft] = useState({
+    title: outline.title ?? "",
+    type: outline.type,
+    content: outline.content
+  });
+
+  function resetDraft() {
+    setDraft({
+      title: outline.title ?? "",
+      type: outline.type,
+      content: outline.content
+    });
+  }
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+
+    if (!draft.content.trim()) {
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      await onSave({
+        id: outline.id,
+        title: draft.title,
+        type: draft.type,
+        content: draft.content,
+        orderIndex: outline.orderIndex
+      });
+      setEditing(false);
+    } catch {
+      // The parent surface renders the API error; keep the current form draft.
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <Surface className="p-4">
+        <form className="grid gap-3" onSubmit={submit}>
+          <div className="flex items-center justify-between gap-3">
+            <p className="font-semibold text-ink">编辑大纲</p>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => {
+                resetDraft();
+                setEditing(false);
+              }}
+              aria-label="取消编辑大纲"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_132px]">
+            <Input
+              value={draft.title}
+              onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
+              placeholder="大纲标题"
+            />
+            <Select
+              value={draft.type}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  type: event.target.value as OutlineItem["type"]
+                }))
+              }
+              aria-label="大纲类型"
+            >
+              <option value="book">全书</option>
+              <option value="volume">分卷</option>
+              <option value="chapter">章节</option>
+              <option value="plot">剧情</option>
+            </Select>
+          </div>
+          <Textarea
+            rows={6}
+            value={draft.content}
+            onChange={(event) => setDraft((current) => ({ ...current, content: event.target.value }))}
+            placeholder="大纲内容"
+          />
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                resetDraft();
+                setEditing(false);
+              }}
+            >
+              取消
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Save className="h-4 w-4" aria-hidden="true" />
+              )}
+              保存大纲
+            </Button>
+          </div>
+        </form>
+      </Surface>
+    );
+  }
+
+  return (
+    <Surface className="p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-semibold text-ink">{outline.title || "剧情节点"}</p>
+            <Badge>{outlineTypeLabel(outline.type)}</Badge>
+          </div>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-black/65">{outline.content}</p>
+        </div>
+        <div className="flex shrink-0 gap-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => {
+              resetDraft();
+              setEditing(true);
+            }}
+            aria-label="编辑大纲"
+          >
+            <Edit3 className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => onDelete(`/api/outlines/${outline.id}`)}
+            aria-label="删除大纲"
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
+      </div>
+    </Surface>
+  );
+}
+
 function CharacterList({
   characters,
+  onSave,
   onDelete
 }: {
   characters: CharacterProfile[];
+  onSave: (value: Partial<CharacterProfile> & { name: string }) => Promise<void>;
   onDelete: (url: string) => void;
 }) {
   if (!characters.length) {
@@ -538,35 +716,87 @@ function CharacterList({
   return (
     <div className="grid gap-3 md:grid-cols-2">
       {characters.map((character) => (
-        <Surface key={character.id} className="p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate font-semibold text-ink">{character.name}</p>
-              <p className="mt-1 text-sm text-black/55">{character.role || "未设置定位"}</p>
-            </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => onDelete(`/api/characters/${character.id}`)}
-              aria-label="删除角色"
-            >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          </div>
-          <p className="mt-3 line-clamp-4 whitespace-pre-wrap text-sm leading-6 text-black/65">
-            {character.personality || character.background || character.motivation || "暂无设定"}
-          </p>
-        </Surface>
+        <CharacterCard key={character.id} character={character} onSave={onSave} onDelete={onDelete} />
       ))}
     </div>
   );
 }
 
+function CharacterCard({
+  character,
+  onSave,
+  onDelete
+}: {
+  character: CharacterProfile;
+  onSave: (value: Partial<CharacterProfile> & { name: string }) => Promise<void>;
+  onDelete: (url: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+
+  async function saveCharacter(value: Partial<CharacterProfile> & { name: string }) {
+    await onSave(value);
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <Surface className="p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="font-semibold text-ink">编辑角色</p>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setEditing(false)}
+            aria-label="取消编辑角色"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
+        <CharacterForm initialValue={character} onSubmit={saveCharacter} />
+      </Surface>
+    );
+  }
+
+  return (
+    <Surface className="p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-ink">{character.name}</p>
+          <p className="mt-1 text-sm text-black/55">{character.role || "未设置定位"}</p>
+        </div>
+        <div className="flex shrink-0 gap-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setEditing(true)}
+            aria-label="编辑角色"
+          >
+            <Edit3 className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => onDelete(`/api/characters/${character.id}`)}
+            aria-label="删除角色"
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
+      </div>
+      <p className="mt-3 line-clamp-4 whitespace-pre-wrap text-sm leading-6 text-black/65">
+        {character.personality || character.background || character.motivation || "暂无设定"}
+      </p>
+    </Surface>
+  );
+}
+
 function WorldSettingList({
   settings,
+  onSave,
   onDelete
 }: {
   settings: WorldSetting[];
+  onSave: (value: Partial<WorldSetting> & { title: string; content: string }) => Promise<void>;
   onDelete: (url: string) => void;
 }) {
   if (!settings.length) {
@@ -576,31 +806,92 @@ function WorldSettingList({
   return (
     <div className="grid gap-3 md:grid-cols-2">
       {settings.map((setting) => (
-        <Surface key={setting.id} className="p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="truncate font-semibold text-ink">{setting.title}</p>
-                <Badge>{setting.category}</Badge>
-                <Badge>{setting.importance} 级</Badge>
-              </div>
-            </div>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => onDelete(`/api/world-settings/${setting.id}`)}
-              aria-label="删除设定"
-            >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          </div>
-          <p className="mt-3 line-clamp-5 whitespace-pre-wrap text-sm leading-6 text-black/65">
-            {setting.content}
-          </p>
-        </Surface>
+        <WorldSettingCard key={setting.id} setting={setting} onSave={onSave} onDelete={onDelete} />
       ))}
     </div>
   );
+}
+
+function WorldSettingCard({
+  setting,
+  onSave,
+  onDelete
+}: {
+  setting: WorldSetting;
+  onSave: (value: Partial<WorldSetting> & { title: string; content: string }) => Promise<void>;
+  onDelete: (url: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+
+  async function saveWorldSetting(value: Partial<WorldSetting> & { title: string; content: string }) {
+    await onSave(value);
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <Surface className="p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="font-semibold text-ink">编辑设定</p>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setEditing(false)}
+            aria-label="取消编辑设定"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
+        <WorldSettingForm initialValue={setting} onSubmit={saveWorldSetting} />
+      </Surface>
+    );
+  }
+
+  return (
+    <Surface className="p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate font-semibold text-ink">{setting.title}</p>
+            <Badge>{setting.category}</Badge>
+            <Badge>{setting.importance} 级</Badge>
+          </div>
+        </div>
+        <div className="flex shrink-0 gap-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setEditing(true)}
+            aria-label="编辑设定"
+          >
+            <Edit3 className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => onDelete(`/api/world-settings/${setting.id}`)}
+            aria-label="删除设定"
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
+      </div>
+      <p className="mt-3 line-clamp-5 whitespace-pre-wrap text-sm leading-6 text-black/65">
+        {setting.content}
+      </p>
+    </Surface>
+  );
+}
+
+function outlineTypeLabel(type: OutlineItem["type"]) {
+  const labels: Record<OutlineItem["type"], string> = {
+    book: "全书",
+    volume: "分卷",
+    chapter: "章节",
+    plot: "剧情"
+  };
+
+  return labels[type];
 }
 
 function VersionList({
