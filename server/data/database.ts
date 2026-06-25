@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type {
   AIJob,
@@ -30,6 +30,7 @@ export type AppDatabase = {
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 const DATA_FILE = path.join(DATA_DIR, "db.json");
+let mutationQueue: Promise<void> = Promise.resolve();
 
 export function nowIso() {
   return new Date().toISOString();
@@ -49,7 +50,11 @@ export async function readDatabase(): Promise<AppDatabase> {
   try {
     const raw = await readFile(DATA_FILE, "utf8");
     return JSON.parse(raw) as AppDatabase;
-  } catch {
+  } catch (error) {
+    if (!isMissingFileError(error)) {
+      throw new Error(`Failed to read local database: ${getErrorMessage(error)}`);
+    }
+
     const seeded = createSeedDatabase();
     await writeDatabase(seeded);
     return seeded;
@@ -58,16 +63,28 @@ export async function readDatabase(): Promise<AppDatabase> {
 
 export async function writeDatabase(database: AppDatabase) {
   await mkdir(DATA_DIR, { recursive: true });
-  await writeFile(DATA_FILE, JSON.stringify(database, null, 2), "utf8");
+  const tempFile = `${DATA_FILE}.${process.pid}.${Date.now()}.${randomUUID()}.tmp`;
+
+  await writeFile(tempFile, JSON.stringify(database, null, 2), "utf8");
+  await rename(tempFile, DATA_FILE);
 }
 
 export async function mutateDatabase<T>(
   mutator: (database: AppDatabase) => T | Promise<T>
 ) {
-  const database = await readDatabase();
-  const result = await mutator(database);
-  await writeDatabase(database);
-  return result;
+  const runMutation = async () => {
+    const database = await readDatabase();
+    const result = await mutator(database);
+    await writeDatabase(database);
+    return result;
+  };
+  const nextMutation = mutationQueue.then(runMutation, runMutation);
+  mutationQueue = nextMutation.then(
+    () => undefined,
+    () => undefined
+  );
+
+  return nextMutation;
 }
 
 export function refreshNovelWordCount(database: AppDatabase, novelId: string) {
@@ -115,6 +132,19 @@ export function createChapterVersion(params: {
 
   params.database.versions.unshift(version);
   return version;
+}
+
+function isMissingFileError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "ENOENT"
+  );
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function createSeedDatabase(): AppDatabase {

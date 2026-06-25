@@ -4,8 +4,7 @@ import {
   createId,
   mutateDatabase,
   nowIso,
-  readDatabase,
-  refreshNovelWordCount
+  readDatabase
 } from "@/server/data/database";
 
 export type NovelCreateInput = {
@@ -20,13 +19,20 @@ export type NovelUpdateInput = Partial<NovelCreateInput>;
 
 export async function listNovels() {
   const database = await readDatabase();
+  const latestChapterByNovelId = new Map<string, (typeof database.chapters)[number]>();
+
+  for (const chapter of database.chapters) {
+    const latestChapter = latestChapterByNovelId.get(chapter.novelId);
+
+    if (!latestChapter || chapter.updatedAt > latestChapter.updatedAt) {
+      latestChapterByNovelId.set(chapter.novelId, chapter);
+    }
+  }
 
   return database.novels
     .map((novel) => ({
       ...novel,
-      latestChapter: database.chapters
-        .filter((chapter) => chapter.novelId === novel.id)
-        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0]
+      latestChapter: latestChapterByNovelId.get(novel.id)
     }))
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
@@ -60,11 +66,17 @@ export async function getNovel(novelId: string) {
     return null;
   }
 
+  const chapters = database.chapters
+    .filter((chapter) => chapter.novelId === novelId)
+    .sort((a, b) => a.orderIndex - b.orderIndex);
+  const totalWordCount = chapters.reduce((total, chapter) => total + chapter.wordCount, 0);
+
   return {
-    novel,
-    chapters: database.chapters
-      .filter((chapter) => chapter.novelId === novelId)
-      .sort((a, b) => a.orderIndex - b.orderIndex),
+    novel: {
+      ...novel,
+      totalWordCount
+    },
+    chapters,
     characters: database.characters
       .filter((character) => character.novelId === novelId)
       .sort((a, b) => a.name.localeCompare(b.name, "zh-CN")),
@@ -135,10 +147,5 @@ export async function deleteNovel(novelId: string) {
 }
 
 export async function exportNovelBundle(novelId: string) {
-  const database = await readDatabase();
-  refreshNovelWordCount(database, novelId);
-
-  const bundle = await getNovel(novelId);
-  return bundle;
+  return getNovel(novelId);
 }
-

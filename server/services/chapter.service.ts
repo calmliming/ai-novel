@@ -204,18 +204,21 @@ export async function reorderChapters(novelId: string, orderedIds: string[]) {
   return mutateDatabase((database) => {
     const chapters = database.chapters.filter((chapter) => chapter.novelId === novelId);
     const chapterIds = new Set(chapters.map((chapter) => chapter.id));
+    const orderById = new Map(orderedIds.map((id, index) => [id, index]));
 
-    if (orderedIds.some((id) => !chapterIds.has(id))) {
+    if (
+      orderedIds.length !== chapters.length ||
+      orderById.size !== orderedIds.length ||
+      orderedIds.some((id) => !chapterIds.has(id))
+    ) {
       return null;
     }
 
     for (const chapter of chapters) {
-      const nextIndex = orderedIds.indexOf(chapter.id);
+      const nextIndex = orderById.get(chapter.id);
 
-      if (nextIndex >= 0) {
-        chapter.orderIndex = nextIndex;
-        chapter.updatedAt = nowIso();
-      }
+      chapter.orderIndex = nextIndex ?? chapter.orderIndex;
+      chapter.updatedAt = nowIso();
     }
 
     return chapters.sort((a, b) => a.orderIndex - b.orderIndex);
@@ -223,9 +226,17 @@ export async function reorderChapters(novelId: string, orderedIds: string[]) {
 }
 
 function shouldCreateAutoVersion(versions: ChapterVersion[], chapter: Chapter) {
-  const latestAuto = versions
-    .filter((version) => version.chapterId === chapter.id && version.source === "auto_save")
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  let latestAuto: ChapterVersion | undefined;
+
+  for (const version of versions) {
+    if (version.chapterId !== chapter.id || version.source !== "auto_save") {
+      continue;
+    }
+
+    if (!latestAuto || version.createdAt > latestAuto.createdAt) {
+      latestAuto = version;
+    }
+  }
 
   if (!latestAuto) {
     return chapter.wordCount >= 20;
@@ -236,4 +247,3 @@ function shouldCreateAutoVersion(versions: ChapterVersion[], chapter: Chapter) {
 
   return elapsedMs >= 60_000 && wordDelta >= 20;
 }
-
