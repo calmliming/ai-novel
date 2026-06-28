@@ -60,8 +60,10 @@ export const TopBar = memo(function TopBar({
           <Menu className="h-5 w-5" aria-hidden="true" />
         </button>
         <div className="min-w-0 text-sm text-slate-500">
-          <div className="flex min-w-0 items-center gap-2 whitespace-nowrap">
-            <span className="hidden shrink-0 truncate sm:inline">{novelTitle || "未命名小说"}</span>
+          <div className="flex min-w-0 max-w-full items-center gap-2 whitespace-nowrap">
+            <span className="hidden max-w-[9rem] truncate sm:block md:max-w-[14rem] lg:max-w-[18rem]">
+              {novelTitle || "未命名小说"}
+            </span>
             <span className="hidden shrink-0 sm:inline">/</span>
             <span className="min-w-0 truncate font-medium text-slate-700">
               {title || "未命名章节"}
@@ -104,7 +106,7 @@ export const TopBar = memo(function TopBar({
         </Button>
         <a
           href={`/api/novels/${novelId}/export?format=md`}
-          className="hidden h-11 items-center gap-2 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 xl:flex"
+          className="hidden h-11 items-center gap-2 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 min-[1440px]:flex"
         >
           <Download className="h-4 w-4" aria-hidden="true" />
           导出

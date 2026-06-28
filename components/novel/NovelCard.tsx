@@ -29,18 +29,18 @@ export function NovelCard({ novel }: { novel: NovelWithLatest }) {
         <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{novel.synopsis}</p>
       ) : null}
 
-      <div className="mt-4 grid grid-cols-2 gap-3 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-slate-400" aria-hidden="true" />
-          {novel.totalWordCount} 字
+      <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-slate-500 min-[420px]:grid-cols-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <FileText className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+          <span className="truncate">{novel.totalWordCount} 字</span>
         </div>
-        <div className="flex items-center gap-2">
-          <Clock3 className="h-4 w-4 text-slate-400" aria-hidden="true" />
-          {formatDateTime(novel.updatedAt)}
+        <div className="flex min-w-0 items-center gap-2">
+          <Clock3 className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+          <span className="truncate">{formatDateTime(novel.updatedAt)}</span>
         </div>
       </div>
 
-      <div className="mt-3 rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-500">
+      <div className="mt-3 truncate rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-500">
         最近章节：{novel.latestChapter?.title || "暂无章节"}
       </div>
 

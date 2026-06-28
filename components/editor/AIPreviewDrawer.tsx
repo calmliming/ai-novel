@@ -34,7 +34,7 @@ export function AIPreviewDrawer({
         <div className="max-h-[32dvh] overflow-auto whitespace-pre-wrap px-4 py-3 text-sm leading-7 text-black/75">
           {content}
         </div>
-        <div className="grid grid-cols-2 gap-2 border-t border-black/10 p-3 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 border-t border-black/10 p-3 min-[520px]:grid-cols-5">
           <Button variant="primary" onClick={() => onApply("append")} disabled={applying}>
             <Send className="h-4 w-4" aria-hidden="true" />
             追加

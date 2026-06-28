@@ -158,7 +158,7 @@ const ChapterGroup = memo(function ChapterGroup({
               href={`/novels/${novelId}/chapters/${chapter.id}`}
               onClick={onNavigate}
               className={cn(
-                "relative grid grid-cols-[1fr_auto] items-center gap-2 rounded-lg px-3 py-2 text-sm transition",
+                "relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg px-3 py-2 text-sm transition",
                 active ? "bg-indigo-50 text-blue-700" : "text-slate-600 hover:bg-white"
               )}
             >
@@ -171,7 +171,7 @@ const ChapterGroup = memo(function ChapterGroup({
               <span className="truncate">
                 第{index + 1}章 {chapter.title}
               </span>
-              <span className="text-xs text-slate-500">{wordCount}</span>
+              <span className="shrink-0 text-xs text-slate-500">{wordCount}</span>
             </Link>
           );
         })}

@@ -290,7 +290,7 @@ export function NovelDetailView({
         ) : null}
       </section>
 
-      <nav className="grid gap-1">
+      <nav className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:mx-0 lg:grid lg:overflow-visible lg:px-0 lg:pb-0">
         {tabs.map((item) => {
           const Icon = item.icon;
           const active = tab === item.id;
@@ -300,7 +300,7 @@ export function NovelDetailView({
               key={item.id}
               type="button"
               onClick={() => setTab(item.id)}
-              className={`focus-ring flex h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium transition ${
+              className={`focus-ring flex h-11 shrink-0 items-center justify-center gap-3 whitespace-nowrap rounded-lg px-3 text-left text-sm font-medium transition lg:justify-start ${
                 active ? "bg-indigo-50 text-blue-700" : "text-slate-600 hover:bg-slate-50"
               }`}
             >

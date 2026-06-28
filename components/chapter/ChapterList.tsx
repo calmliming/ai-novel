@@ -27,17 +27,17 @@ export function ChapterList({
     <div className="grid gap-3">
       {chapters.map((chapter, index) => (
         <Surface key={chapter.id} className="p-4">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <Link
               href={`/novels/${novelId}/chapters/${chapter.id}`}
               className="min-w-0 flex-1"
             >
               <p className="truncate text-base font-semibold text-ink">{chapter.title}</p>
-              <p className="mt-1 text-sm text-black/55">
+              <p className="mt-1 line-clamp-2 text-sm text-black/55 sm:block sm:truncate">
                 {chapter.wordCount} 字 · v{chapter.versionNo} · {formatDateTime(chapter.updatedAt)}
               </p>
             </Link>
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1 self-start sm:self-auto">
               <Button
                 size="icon"
                 variant="ghost"
@@ -68,7 +68,7 @@ export function ChapterList({
           </div>
           <Link
             href={`/novels/${novelId}/chapters/${chapter.id}`}
-            className="focus-ring mt-3 inline-flex h-10 items-center gap-2 rounded-md border border-black/10 bg-white px-3 text-sm font-medium text-ink"
+            className="focus-ring mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-black/10 bg-white px-3 text-sm font-medium text-ink sm:w-auto"
           >
             <FilePenLine className="h-4 w-4" aria-hidden="true" />
             编辑正文
@@ -78,4 +78,3 @@ export function ChapterList({
     </div>
   );
 }
-

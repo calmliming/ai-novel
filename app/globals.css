@@ -22,11 +22,13 @@
 
 html {
   min-height: 100%;
+  overflow-x: hidden;
 }
 
 body {
   min-height: 100dvh;
   margin: 0;
+  overflow-x: hidden;
   background: #f8fafc;
   color: #020617;
   -webkit-tap-highlight-color: transparent;

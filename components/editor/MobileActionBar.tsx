@@ -33,7 +33,7 @@ export const MobileActionBar = memo(function MobileActionBar({
         onClick={onOpenChapters}
       />
       <ActionButton
-        className="xl:hidden"
+        className="min-[1440px]:hidden"
         icon={Sparkles}
         label="AI 助手"
         onClick={onOpenAssistant}

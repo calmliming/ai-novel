@@ -84,11 +84,11 @@ export function VersionPanelContent({
       </div>
 
       <div className="min-w-0 p-4">
-        <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="truncate text-sm font-semibold text-slate-700">
             对比：v{previousVersion?.versionNo ?? "-"} → v{latestVersion?.versionNo ?? "-"}
           </p>
-          <div className="flex items-center gap-4 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
             <span className="flex items-center gap-1">
               <span className="h-3 w-3 rounded-sm bg-emerald-100" />
               新增

@@ -57,7 +57,7 @@ export function CharacterForm({
 
   return (
     <form className="grid gap-3" onSubmit={submit}>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Input
           value={value.name}
           onChange={(event) => setValue((current) => ({ ...current, name: event.target.value }))}

@@ -71,7 +71,7 @@ export function ChapterEditor({ novelId, chapterId }: { novelId: string; chapter
 
   return (
     <div className="h-[100dvh] overflow-hidden bg-[#f8fafc] text-slate-950">
-      <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[72px_minmax(0,1fr)] lg:grid-cols-[76px_220px_minmax(0,1fr)] xl:grid-cols-[80px_232px_minmax(0,1fr)_300px] min-[1800px]:grid-cols-[188px_256px_minmax(0,1fr)_334px]">
+      <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[72px_minmax(0,1fr)] lg:grid-cols-[76px_236px_minmax(0,1fr)] min-[1440px]:grid-cols-[80px_244px_minmax(0,1fr)_312px] min-[1800px]:grid-cols-[188px_256px_minmax(0,1fr)_334px]">
         <PrimarySidebar novelId={novelId} chapterId={chapterId} bundle={bundle} />
 
         <ChapterSidebar
@@ -123,7 +123,7 @@ export function ChapterEditor({ novelId, chapterId }: { novelId: string; chapter
                 <input
                   value={title}
                   onChange={(event) => updateTitle(event.target.value)}
-                  className="min-w-0 flex-1 bg-transparent text-[24px] font-semibold tracking-normal text-slate-950 outline-none sm:text-[26px] lg:text-[28px]"
+                  className="min-w-0 flex-1 bg-transparent text-[22px] font-semibold tracking-normal text-slate-950 outline-none sm:text-[26px] lg:text-[28px]"
                   placeholder="章节标题"
                 />
                 <Link

@@ -46,11 +46,11 @@ export function AppShell({
         className={cn(
           "grid min-h-[calc(100dvh-64px)] grid-cols-1 lg:h-screen lg:min-h-0 lg:overflow-hidden",
           hasSidebar && hasAside &&
-            "lg:grid-cols-[76px_280px_minmax(0,1fr)] xl:grid-cols-[80px_292px_minmax(0,1fr)_320px] min-[1680px]:grid-cols-[208px_320px_minmax(0,1fr)_340px]",
+            "lg:grid-cols-[76px_280px_minmax(0,1fr)] min-[1440px]:grid-cols-[80px_292px_minmax(0,1fr)_320px] min-[1680px]:grid-cols-[208px_320px_minmax(0,1fr)_340px]",
           hasSidebar && !hasAside &&
             "lg:grid-cols-[76px_300px_minmax(0,1fr)] min-[1680px]:grid-cols-[208px_320px_minmax(0,1fr)]",
           !hasSidebar && hasAside &&
-            "lg:grid-cols-[76px_minmax(0,1fr)] xl:grid-cols-[80px_minmax(0,1fr)_320px] min-[1680px]:grid-cols-[208px_minmax(0,1fr)_340px]",
+            "lg:grid-cols-[76px_minmax(0,1fr)] min-[1440px]:grid-cols-[80px_minmax(0,1fr)_320px] min-[1680px]:grid-cols-[208px_minmax(0,1fr)_340px]",
           !hasSidebar && !hasAside &&
             "lg:grid-cols-[76px_minmax(0,1fr)] min-[1680px]:grid-cols-[208px_minmax(0,1fr)]"
         )}
@@ -66,7 +66,7 @@ export function AppShell({
           </aside>
         ) : null}
 
-        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden bg-slate-50">
+        <section className="flex min-w-0 flex-col bg-slate-50 lg:min-h-0 lg:overflow-hidden">
           {header ? (
             <header className="shrink-0 border-b border-slate-200 bg-white px-4 py-3 lg:px-6">
               {header}
@@ -74,7 +74,7 @@ export function AppShell({
           ) : null}
           <main
             className={cn(
-              "min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-5 sm:px-5 lg:px-6 lg:py-6",
+              "min-w-0 flex-1 px-4 py-5 sm:px-5 lg:min-h-0 lg:overflow-y-auto lg:px-6 lg:py-6",
               contentClassName
             )}
           >
@@ -85,7 +85,7 @@ export function AppShell({
         {aside ? (
           <aside
             aria-label={asideLabel}
-            className="hidden min-h-0 min-w-0 overflow-y-auto border-l border-slate-200 bg-white xl:block"
+            className="hidden min-h-0 min-w-0 overflow-y-auto border-l border-slate-200 bg-white min-[1440px]:block"
           >
             {aside}
           </aside>

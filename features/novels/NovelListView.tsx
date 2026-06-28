@@ -77,7 +77,7 @@ export function NovelListView() {
   }
 
   const sidebar = (
-    <div className="grid gap-6 p-4 lg:p-5">
+    <div className="grid gap-5 p-4 sm:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] sm:items-start lg:grid-cols-1 lg:p-5">
       <section>
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -124,7 +124,11 @@ export function NovelListView() {
         </Button>
       </form>
 
-      {error ? <p className="rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+      {error ? (
+        <p className="rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700 sm:col-span-2 lg:col-span-1">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 

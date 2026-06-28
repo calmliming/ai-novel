@@ -143,7 +143,7 @@ export function AIAssistantContent({
 /** Desktop pane wrapper. */
 export function AIAssistantPanel(props: AIAssistantProps) {
   return (
-    <aside className="hidden h-full min-h-0 overflow-y-auto bg-white xl:block">
+    <aside className="hidden h-full min-h-0 overflow-y-auto bg-white min-[1440px]:block">
       <AIAssistantContent {...props} />
     </aside>
   );
@@ -167,7 +167,7 @@ const AssistantCard = memo(function AssistantCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-blue-700">
           <Icon className="h-4 w-4" aria-hidden="true" />
