@@ -7,15 +7,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Surface } from "@/components/ui/surface";
 
+const DEFAULT_ACCOUNT_BALANCE = 0;
+const balanceFormatter = new Intl.NumberFormat("zh-CN", {
+  style: "currency",
+  currency: "CNY"
+});
+
 export default function LoginPage() {
   const [email, setEmail] = useState("writer@example.local");
   const [password, setPassword] = useState("");
   const [signedIn, setSignedIn] = useState(false);
+  const isAdmin = password.trim().length > 0;
+  const accountRole = isAdmin ? "管理员" : "写作者";
+  const accountBalance = balanceFormatter.format(DEFAULT_ACCOUNT_BALANCE);
 
   function submit(event: FormEvent) {
     event.preventDefault();
     localStorage.setItem("ai-novel-session", "self-use");
     localStorage.setItem("ai-novel-email", email);
+    localStorage.setItem("ai-novel-role", isAdmin ? "admin" : "writer");
+    localStorage.setItem("ai-novel-balance", String(DEFAULT_ACCOUNT_BALANCE));
     setSignedIn(true);
   }
 
@@ -31,6 +42,10 @@ export default function LoginPage() {
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
         <p className="text-sm font-medium text-slate-700">当前邮箱</p>
         <p className="mt-2 break-all text-sm text-slate-500">{email}</p>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <AccountInfo label="当前身份" value={accountRole} />
+        <AccountInfo label="账户余额" value={accountBalance} />
       </div>
     </div>
   );
@@ -49,6 +64,11 @@ export default function LoginPage() {
                 建立本地会话后，可以进入写作台继续管理作品。
               </p>
             </div>
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 gap-3 border-y border-slate-100 py-3">
+            <AccountInfo label="当前身份" value={accountRole} compact />
+            <AccountInfo label="账户余额" value={accountBalance} compact />
           </div>
 
           <form className="mt-5 grid gap-3" onSubmit={submit}>
@@ -73,5 +93,22 @@ export default function LoginPage() {
         </Surface>
       </div>
     </AppShell>
+  );
+}
+
+function AccountInfo({
+  label,
+  value,
+  compact = false
+}: {
+  label: string;
+  value: string;
+  compact?: boolean;
+}) {
+  return (
+    <div className={compact ? "min-w-0" : "min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-3"}>
+      <p className="truncate text-xs text-slate-500">{label}</p>
+      <p className="mt-1 truncate text-sm font-semibold text-slate-900">{value}</p>
+    </div>
   );
 }
